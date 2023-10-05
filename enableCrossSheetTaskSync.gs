@@ -12,6 +12,23 @@
 2. Create a new row on the priority page and copy the existing row values over.
     2A. Copy the event's row values, 
 3. Set up an onChange event on the priority column, the script to create a new task should trigger if the value of the cell changes at all.
-
-
 */
+
+
+const sheetName = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getName();
+const cellValueSheetName = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange('A1').getValue();
+
+function setSheetName(e) { // 1B. Set up logic to return the name of the sheet as a string value.
+    return SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange('A1').setValue(sheetName);
+  }
+
+  function handleUpdateTaskIds() { // 1B+1. FOR IF SHEET NAME IS CHANGED, create logic to update all the ids on both the priority and project page.
+    return console.log("Update Task_IDs");
+  }
+function checkSheetName() { // 1B+1. Check for sheet name change.
+    if (sheetName !== cellValueSheetName) {
+      setSheetName();
+      handleUpdateTaskIds();
+      return;
+    }
+}
