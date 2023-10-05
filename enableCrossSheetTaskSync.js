@@ -25,6 +25,7 @@ function createUniqueTaskID() {
 }
 function onEdit(e) {  
   if (e && activeCellValue === 'Critical' || activeCellValue === 'High') {
+        // NEED TO CHECK THAT AN ID DOESN'T ALREADY EXIST
         const uniqueTaskId = createUniqueTaskID();
         // NEED TO FIND COLUMN A OF THE SAME ROW AS THE ACTIVE CELL
         return activeSheet.getRange('A10').setValue(uniqueTaskId);
