@@ -13,10 +13,10 @@ const rowIdx = activeCell.getRowIndex();
 
 
 
-function handleSheetNameChange() { // 1B+1. FOR IF SHEET NAME IS CHANGED, create logic to update all the ids on both the priority and project page.
+function handleSheetNameChange(e) { // 1B+1. FOR IF SHEET NAME IS CHANGED, create logic to update all the ids on both the priority and project page.
     const colA = activeSheet.getRange('A:A').getValues();
 
-    if (sheetName && cellSheetNameValue && colA) { 
+    if (colA) { 
 
     for (let i = 2; i < colA.length; i++) {
         const taskId = colA[i];
@@ -64,9 +64,9 @@ function handleSheetNameChange() { // 1B+1. FOR IF SHEET NAME IS CHANGED, create
 
 function onEdit(e) { 
     const activeCellValue = activeCell.getValue();
-    if (e && priorityArray.includes(activeCellValue)) {
-        handleCreateUniqueTaskID();
-    } else {
-      handleSheetNameChange()
+      if (e && priorityArray.includes(activeCellValue)) {
+          handleCreateUniqueTaskID();
+        } else {
+          handleSheetNameChange()
+        }
     }
-  }
