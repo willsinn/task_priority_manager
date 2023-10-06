@@ -11,7 +11,6 @@ const rowIdx = activeCell.getRowIndex();
     const colA = activeSheet.getRange('A:A').getValues();
 
 const handleUpdateIDsOnSheetNameChange = () => colA.map((tId, idx) => { //map through all existing IDs and update them to match the new sheet name
-      Logger.log(tId)
       const task = { idvalue: "" };
 
       if (idx > 1 && tId[0]) { //skip first two rows
@@ -35,13 +34,11 @@ const handleUpdateIDsOnSheetNameChange = () => colA.map((tId, idx) => { //map th
         }
       })
 
-
 function handleUpdateCellA1() {
       const getSheetNameCell = activeSheet.getRange('A1');
       getSheetNameCell.setValue(sheetName);
       return;
 }
-
 
 function handleSheetNameChange() {
       if (sheetName !== cellSheetNameValue) {
@@ -50,7 +47,7 @@ function handleSheetNameChange() {
       }
     }
 
-  function handleCreateUniqueTaskID() {
+function handleCreateUniqueTaskID() {
     const taskIdCell = activeSheet.getRange(`A${rowIdx}`);
 
     if (!taskIdCell.getValue()) {
@@ -61,8 +58,6 @@ function handleSheetNameChange() {
         taskIdCell.setValue(`${taskId}`); //add id to first column
     } 
   }
-
-
 
 function onEdit(e) { 
     const activeCellValue = activeCell.getValue();
