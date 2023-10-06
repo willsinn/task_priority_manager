@@ -1,70 +1,72 @@
+const priorityArray = ["Critical", "High", "Medium", "Low"];
+
+
 const activeSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 const sheetName = activeSheet.getName();
-const cellSheetName = activeSheet.getRange('A1');
+const cellSheetNameValue = activeSheet.getRange('A1').getValue();
 const cellTaskCount = activeSheet.getRange('A2');
 
 const activeCell = activeSheet.getActiveCell();
-    const rowIdx = activeCell.getRowIndex();
+const rowIdx = activeCell.getRowIndex();
 
 
 
-function setSheetName(e) { // 1B. Set up logic to return the name of the sheet as a string value.
-    return activeSheet.getRange('A1').setValue(sheetName);
-  }
 
-function handleUpdateActiveSheetTaskIds() { // 1B+1. FOR IF SHEET NAME IS CHANGED, create logic to update all the ids on both the priority and project page.
+
+function handleSheetNameChange() { // 1B+1. FOR IF SHEET NAME IS CHANGED, create logic to update all the ids on both the priority and project page.
     const colA = activeSheet.getRange('A:A').getValues();
 
+    if (sheetName && cellSheetNameValue && colA) { 
+
     for (let i = 2; i < colA.length; i++) {
-        const taskId = colA[i][0];
-        Logger.log(taskId[1], "TaskId, Line 20")
-        const strLength = taskId.length
-
-        if (!strLength && strLength > 0) {
-          const numArray = [];
-
-            for (let j = 0; j < strLength; j++) {
-                const letter = taskId.charAt(strLength-1-j);
-                Logger.log(letter, "Letter, Line 25")
-                if (letter == "_") {
-                  break;
-                } 
-                numArray.push(letter);
-            }
-          const idNum = numArray.reverse().join("");
-          const newId = `${sheetName}` + '_' + `${idNum}`;
-          const targetCell = activeSheet.getRange(`A${i}`)
-          targetCell.setValue(newId);
-          return
+        const taskId = colA[i];
+        const task = { idvalue: "" };
+        if (taskId[0]) {
+            
+            let isNum = true;
+            let idx = taskId[0].length - 1;
+            while (isNum) {
+                const char = taskId[0][idx];
+                if (parseInt(char) === NaN) {
+                    isNum = false;
+                } else {
+                    if (task.idvalue) {
+                      const str = `${char}${task.idvalue}`
+                      task.idvalue = str;
+                    } else {
+                      task.idvalue = `${char}`;
+                  }
+                }
+                idx--;
+              }
+            const newId = `${sheetName}` + '_' + `${task.idvalue}`;
+            const targetCell = activeSheet.getRange(`A${parseInt(i+1)}`)
+            targetCell.setValue(newId);
         }
     }
+    activeSheet.getRange('A1').setValue(sheetName)
   }
+}
+  
   function handleCreateUniqueTaskID() {
     const taskIdCell = activeSheet.getRange(`A${rowIdx}`);
 
     if (!taskIdCell.getValue()) {
-        const taskId = `${cellSheetName.getValue()}` + "_" + `${cellTaskCount.getValue()}`;
+        const taskId = `${cellSheetNameValue}` + "_" + `${cellTaskCount.getValue()}`;
 
         activeSheet.getRange('A2').setValue(cellTaskCount.getValue() +1); //update task counter
 
-        taskIdCell.setValue(`A${taskId}`); //add id to first column
-        return;
+        taskIdCell.setValue(`${taskId}`); //add id to first column
     } 
   }
-function checkSheetName() {
 
-    if (sheetName !== cellSheetName.getValue()) {
-      handleUpdateActiveSheetTaskIds()
-      setSheetName()
-      return;
-    }
-  }
 
 
 function onEdit(e) { 
-    if (e && activeCell.getValue() === "Critical" || activeCell.getValue() === "High" || activeCell.getValue() === "Medium" || activeCell.getValue() === "Low") {
-        checkSheetName();
+    const activeCellValue = activeCell.getValue();
+    if (e && priorityArray.includes(activeCellValue)) {
         handleCreateUniqueTaskID();
-        return;
-    } 
+    } else {
+      handleSheetNameChange()
+    }
   }
