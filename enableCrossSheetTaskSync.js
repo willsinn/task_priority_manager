@@ -8,46 +8,48 @@ const cellTaskCount = activeSheet.getRange('A2');
 
 const activeCell = activeSheet.getActiveCell();
 const rowIdx = activeCell.getRowIndex();
-
-
-
-
-
-function handleSheetNameChange(e) { // 1B+1. FOR IF SHEET NAME IS CHANGED, create logic to update all the ids on both the priority and project page.
     const colA = activeSheet.getRange('A:A').getValues();
 
-    if (colA) { 
+const handleUpdateIDsOnSheetNameChange = () => colA.map((tId, idx) => { //map through all existing IDs and update them to match the new sheet name
+      Logger.log(tId)
+      const task = { idvalue: "" };
 
-    for (let i = 2; i < colA.length; i++) {
-        const taskId = colA[i];
-        const task = { idvalue: "" };
-        if (taskId[0]) {
-            
-            let isNum = true;
-            let idx = taskId[0].length - 1;
-            while (isNum) {
-                const char = taskId[0][idx];
-                if (parseInt(char) === NaN) {
-                    isNum = false;
-                } else {
-                    if (task.idvalue) {
-                      const str = `${char}${task.idvalue}`
-                      task.idvalue = str;
-                    } else {
-                      task.idvalue = `${char}`;
-                  }
+      if (idx > 1 && tId[0]) { //skip first two rows
+          let tIdSplit = tId[0].split("");
+
+          for (let i = 0; i < 5; i++) { // account for a 6 digit ID number
+              const lastLetter = tIdSplit.pop();
+              if (lastLetter == "_" || !parseInt(lastLetter)) { // if last letter is NaN
+                  break;
+              } else if (!task.idvalue) {
+                  task.idvalue = `${lastLetter}`;
+              } else {
+                  const str = `${lastLetter}${task.idvalue}`
+                  task.idvalue = str;
                 }
-                idx--;
-              }
+            }
+
             const newId = `${sheetName}` + '_' + `${task.idvalue}`;
-            const targetCell = activeSheet.getRange(`A${parseInt(i+1)}`)
+            const targetCell = activeSheet.getRange(`A${parseInt(idx+1)}`)
             targetCell.setValue(newId);
         }
-    }
-    activeSheet.getRange('A1').setValue(sheetName)
-  }
+      })
+
+
+function handleUpdateCellA1() {
+      const getSheetNameCell = activeSheet.getRange('A1');
+      getSheetNameCell.setValue(sheetName);
+      return;
 }
-  
+
+
+function handleSheetNameChange() {
+      if (sheetName !== cellSheetNameValue) {
+        handleUpdateIDsOnSheetNameChange()
+        handleUpdateCellA1();
+      }
+    }
+
   function handleCreateUniqueTaskID() {
     const taskIdCell = activeSheet.getRange(`A${rowIdx}`);
 
@@ -65,7 +67,7 @@ function handleSheetNameChange(e) { // 1B+1. FOR IF SHEET NAME IS CHANGED, creat
 function onEdit(e) { 
     const activeCellValue = activeCell.getValue();
       if (e && priorityArray.includes(activeCellValue)) {
-          handleCreateUniqueTaskID();
+          handleCreateUniqueTaskID()
         } else {
           handleSheetNameChange()
         }
