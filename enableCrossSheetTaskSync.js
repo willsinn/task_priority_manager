@@ -33,7 +33,9 @@ const handleUpdatePriorityIds = () => priorityColA.map((pId, idx) => {
         if (getIdParts[0] == cellSheetNameValue) {
             const newId = `${sheetName}` + '__' + `${getIdParts[1]}`;
             const targetCell = prioritySheet.getRange(`A${parseInt(idx+1)}`)
+            const projectCell = prioritySheet.getRange(`B${parseInt(idx+1)}`)
             targetCell.setValue(newId);
+            projectCell.setValue(sheetName)
         }
     }
 })
