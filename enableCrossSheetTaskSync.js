@@ -53,6 +53,7 @@ function handleCopyNewTaskToPriorityManager(tId) {
       const newTaskValues = newTaskRow.getValues()
       const getPrioSheetRowIdx = prioritySheet.getLastRow();
       prioritySheet.insertRowAfter(getPrioSheetRowIdx); //insert new row
+      newTaskValues[0].splice(1, 0, sheetName);
       prioritySheet.getRange(getPrioSheetRowIdx + 1, 1, 1, newTaskValues[0].length).setValues(newTaskValues)
       handleSheetNameChange();
     }
