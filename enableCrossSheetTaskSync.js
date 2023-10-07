@@ -60,7 +60,27 @@ function handleCopyNewTaskToPriorityManager(tId) {
       handleSheetNameChange();
     }
 }
-
+function syncCellValueByTaskId(newVal) {
+    const activeColA = activeSheet.getRange('A:A').getValues();
+    const valueTaskId = activeColA[rowIdx-1];
+    const valueColHeader = activeSheet.getRange(2, colIdx).getValue();
+    const valueProjectName = valueTaskId[0].split("__")[0]
+    const targetSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(valueProjectName);
+    const targetValueTaskIdRow = targetSheet.getRange('A:A').getValues()
+    const tRowIdx = []
+    targetValueTaskIdRow.forEach((r, i) => {
+      if (r[0] && i > 1 && valueTaskId[0] === r[0]) {
+        tRowIdx.push(i);
+        return
+      }
+    });
+    const targetSheetMaxCols = targetSheet.getMaxColumns();
+    const targetHeaders = targetSheet.getRange(2, 1, 1, targetSheetMaxCols).getValues();
+    const tColIdx = targetHeaders[0].indexOf(valueColHeader);
+    const tCell = targetSheet.getRange(tRowIdx[0]+1, tColIdx+1)
+    tCell.setValue(newVal)
+    Logger.log(tColIdx)
+}
 function handleCreateUniqueTaskID() {
     const taskIdCell = activeSheet.getRange(`A${rowIdx}`);
 
@@ -82,5 +102,6 @@ function onEdit(e) {
           handleCreateUniqueTaskID()
         } else {
           handleSheetNameChange()
+            syncCellValueByTaskId(activeCell.getValue())
         }
     }
