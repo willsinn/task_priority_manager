@@ -66,37 +66,34 @@ function handleCopyNewTaskToPriorityManager(tId) {
     }
 }
 
-function updatePriorityTaskValue(val) { // IF ANY values on the project page are edited, this script will UPDATE the PRIORITY SHEET values to match the changes
+function handleSyncCellValueByTaskId(newVal) { 
+      if (newVal) {
+          const valTaskId = activeSheet.getRange('A:A').getValues()[activeSheet.getActiveCell().getRowIndex() - 1][0];
+          const valColHeader = activeSheet.getRange(2, activeSheet.getActiveCell().getColumnIndex()).getValue();
+          const valProjectName = valTaskId.slice(0, -9); //slice off __#######
+          let targetSheet;
 
-}
-
-function updateProjectTaskValue(val) { // IF ANY values on the priority page are edited, this script will UPDATE corresponding PROJECT SHEET values to match the changes
-        const valueTaskId = activeSheetColA_values[activeRowIdx - 1][0];
-        const valueColHeader = activeSheet.getRange(2, activeColIdx).getValue();
-        const valueProjectName = valueTaskId.slice(0, -9); //slice off __#######
-        const targetSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(valueProjectName);
-        const targetValueTaskIdRow = targetSheet.getRange('A:A').getValues()
-        const rowArray = []
-        targetValueTaskIdRow.forEach((r, i) => {
-          if (r[0] && i > 1 && valueTaskId === r[0]) {
-            rowArray.push(i);
+          if (activeSheetName === mainSheet) { // IF ANY values on the priority page are edited, this script will UPDATE corresponding PROJECT SHEET values to match the changes
+            targetSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(valProjectName);
+          } else { // IF ANY values on the project page are edited, this script will UPDATE the PRIORITY SHEET values to match the changes
+            targetSheet = prioritySheet;
           }
-        });
-        const targetSheetMaxCols = targetSheet.getMaxColumns();
-        const targetHeaders = targetSheet.getRange(2, 1, 1, targetSheetMaxCols).getValues();
-        const taskColIdx = targetHeaders[0].indexOf(valueColHeader);
-        const tCell = targetSheet.getRange(rowArray[0]+1, taskColIdx + 1)
-        tCell.setValue(val)
-}
-function handleSyncCellValueByTaskId(newVal) {
-    if (newVal) {
-        if (activeSheetName === mainSheet) {
-          updateProjectTaskValue(newVal);
-        } else {
-          updatePriorityTaskValue(newVal)
+
+          const targetValueTaskIdRow = targetSheet.getRange('A:A').getValues()
+          const rowArray = []
+          targetValueTaskIdRow.forEach((r, i) => {
+            if (r[0] && i > 1 && valTaskId === r[0]) {
+              rowArray.push(i);
+            }
+          });
+          const targetSheetMaxCols = targetSheet.getMaxColumns();
+          const targetHeaders = targetSheet.getRange(2, 1, 1, targetSheetMaxCols).getValues();
+          const targetTaskColIdx = targetHeaders[0].indexOf(valColHeader);
+          const targetSheetCell = targetSheet.getRange(rowArray[0]+1, targetTaskColIdx + 1)
+          targetSheetCell.setValue(newVal)
         }
-    }
 }
+
 function handleCreateUniqueTaskID(cell) {
     const taskCount = prioritySheetTaskCountCell.getValue();
         const taskId = `${activeSheetName}` + "__" + `${taskCount}`;
@@ -110,7 +107,6 @@ function handlePriorityLevelChange(prioLvl) {
       const activeIdValue = activeIdCell.getValue();
       if (!activeIdValue) {
           handleCreateUniqueTaskID(activeIdCell)
-          Logger.log(activeCellValue)
       } else {
           handleSyncCellValueByTaskId(prioLvl)
       }
