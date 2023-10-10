@@ -65,8 +65,12 @@ function handleCopyNewTaskToPriorityManager(tId) {
       prioritySheet.getRange(getPrioSheetRowIdx + 1, 1, 1, newTaskValues[0].length).setValues(newTaskValues)
     }
 }
-function syncCellValueByTaskId(newVal) {
-    if (newVal) {
+
+function updatePriorityTaskValue(val) { // IF ANY values on the project page are edited, this script will UPDATE the PRIORITY SHEET values to match the changes
+
+}
+
+function updateProjectTaskValue(val) { // IF ANY values on the priority page are edited, this script will UPDATE corresponding PROJECT SHEET values to match the changes
         const valueTaskId = activeSheetColA_values[activeRowIdx - 1][0];
         const valueColHeader = activeSheet.getRange(2, activeColIdx).getValue();
         const valueProjectName = valueTaskId.slice(0, -9); //slice off __#######
@@ -82,7 +86,15 @@ function syncCellValueByTaskId(newVal) {
         const targetHeaders = targetSheet.getRange(2, 1, 1, targetSheetMaxCols).getValues();
         const taskColIdx = targetHeaders[0].indexOf(valueColHeader);
         const tCell = targetSheet.getRange(rowArray[0]+1, taskColIdx + 1)
-        tCell.setValue(newVal)
+        tCell.setValue(val)
+}
+function handleSyncCellValueByTaskId(newVal) {
+    if (newVal) {
+        if (activeSheetName === mainSheet) {
+          updateProjectTaskValue(newVal);
+        } else {
+          updatePriorityTaskValue(newVal)
+        }
     }
 }
 function handleCreateUniqueTaskID(cell) {
@@ -100,10 +112,8 @@ function handlePriorityLevelChange(prioLvl) {
           handleCreateUniqueTaskID(activeIdCell)
           Logger.log(activeCellValue)
       } else {
-          syncCellValueByTaskId(prioLvl)
+          handleSyncCellValueByTaskId(prioLvl)
       }
-
-
 }
 
 function onEdit(e) { 
@@ -111,6 +121,6 @@ function onEdit(e) {
       if (e && priorityArray.includes(activeCellValue)) {
           handlePriorityLevelChange(activeCellValue)
         } else {
-          syncCellValueByTaskId(activeCellValue)
+          handleSyncCellValueByTaskId(activeCellValue)
         }
     }
