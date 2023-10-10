@@ -1,4 +1,4 @@
-let mainSheet = "task_priority_manager";
+const mainSheet = "task_priority_manager";
 const priorityArray = ["Critical", "High", "Medium", "Low"];
 
 const prioritySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(mainSheet);
@@ -47,7 +47,7 @@ const handleUpdatePriorityIds = () => prioritySheetColA.map((pId, idx) => {
 })
 
 function handleSheetNameChange() {
-      if (activeSheetName !== activeSheetCellA1Value) {
+      if (activeSheetName !== mainSheet && activeSheetName !== activeSheetCellA1Value) {
         handleUpdateIDsOnSheetNameChange();
         handleUpdatePriorityIds();
         handleUpdateCellA1();
@@ -63,51 +63,54 @@ function handleCopyNewTaskToPriorityManager(tId) {
       prioritySheet.insertRowAfter(getPrioSheetRowIdx); //insert new row
       newTaskValues[0].splice(1, 0, activeSheetName);
       prioritySheet.getRange(getPrioSheetRowIdx + 1, 1, 1, newTaskValues[0].length).setValues(newTaskValues)
-      handleSheetNameChange();
     }
 }
 function syncCellValueByTaskId(newVal) {
-  if(newVal){
-      const valueTaskId = activeSheetColA_values[activeRowIdx - 1];
-      const valueColHeader = activeSheet.getRange(2, activeColIdx).getValue();
-      const valueProjectName = valueTaskId[0].split("__")[0]
-      const targetSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(valueProjectName);
-      const targetValueTaskIdRow = targetSheet.getRange('A:A').getValues()
-      const rowArray = []
-      targetValueTaskIdRow.forEach((r, i) => {
-        if (r[0] && i > 1 && valueTaskId[0] === r[0]) {
-          rowArray.push(i);
-        }
-      });
-      const targetSheetMaxCols = targetSheet.getMaxColumns();
-      const targetHeaders = targetSheet.getRange(2, 1, 1, targetSheetMaxCols).getValues();
-      const taskColIdx = targetHeaders[0].indexOf(valueColHeader);
-      const tCell = targetSheet.getRange(rowArray[0]+1, taskColIdx + 1)
-      tCell.setValue(newVal)
-  }
-}
-function handleCreateUniqueTaskID() {
-    const taskIdCell = activeSheet.getRange(`A${activeRowIdx}`);
-    const taskCount = prioritySheetTaskCountCell.getValue();
-
-    if (!taskIdCell.getValue()) {
-        const taskId = `${activeSheetName}` + "__" + `${taskCount}`;
-        // prioritySheet.getRange('A2').setValue(taskCount+1); //update task counter
-        handleUpdateMainTaskCountCellA2(taskCount)
-        taskIdCell.setValue(`${taskId}`); //add id to first column
-        handleUpdatePriorityIds();
-        handleCopyNewTaskToPriorityManager(taskId);
-    } else {
-        handleSheetNameChange()
+    if (newVal) {
+        const valueTaskId = activeSheetColA_values[activeRowIdx - 1][0];
+        const valueColHeader = activeSheet.getRange(2, activeColIdx).getValue();
+        const valueProjectName = valueTaskId.slice(0, -9); //slice off __#######
+        const targetSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(valueProjectName);
+        const targetValueTaskIdRow = targetSheet.getRange('A:A').getValues()
+        const rowArray = []
+        targetValueTaskIdRow.forEach((r, i) => {
+          if (r[0] && i > 1 && valueTaskId === r[0]) {
+            rowArray.push(i);
+          }
+        });
+        const targetSheetMaxCols = targetSheet.getMaxColumns();
+        const targetHeaders = targetSheet.getRange(2, 1, 1, targetSheetMaxCols).getValues();
+        const taskColIdx = targetHeaders[0].indexOf(valueColHeader);
+        const tCell = targetSheet.getRange(rowArray[0]+1, taskColIdx + 1)
+        tCell.setValue(newVal)
     }
+}
+function handleCreateUniqueTaskID(cell) {
+    const taskCount = prioritySheetTaskCountCell.getValue();
+        const taskId = `${activeSheetName}` + "__" + `${taskCount}`;
+        handleUpdateMainTaskCountCellA2(taskCount)
+        cell.setValue(`${taskId}`); //add id to first column
+        handleUpdatePriorityIds();
+        handleCopyNewTaskToPriorityManager(taskId); 
   }
+function handlePriorityLevelChange(prioLvl) {
+      const activeIdCell = activeSheet.getRange(`A${activeRowIdx}`);
+      const activeIdValue = activeIdCell.getValue();
+      if (!activeIdValue) {
+          handleCreateUniqueTaskID(activeIdCell)
+          Logger.log(activeCellValue)
+      } else {
+          syncCellValueByTaskId(prioLvl)
+      }
 
+
+}
 
 function onEdit(e) { 
+      handleSheetNameChange();
       if (e && priorityArray.includes(activeCellValue)) {
-          handleCreateUniqueTaskID()
+          handlePriorityLevelChange(activeCellValue)
         } else {
-          handleSheetNameChange()
-            syncCellValueByTaskId(activeCellValue)
+          syncCellValueByTaskId(activeCellValue)
         }
     }
