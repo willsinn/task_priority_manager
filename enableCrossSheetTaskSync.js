@@ -1,4 +1,5 @@
 const mainSheet = "task_priority_manager";
+const completedSheet = "completed_tasks"
 const priorityArray = ["Critical", "High", "Medium", "Low"];
 
 const prioritySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(mainSheet);
@@ -111,12 +112,19 @@ function handlePriorityLevelChange(prioLvl) {
           handleSyncCellValueByTaskId(prioLvl)
       }
 }
+/* function alertMessageOKButton() {
+  const result = SpreadsheetApp.getUi().alert("Alert message", SpreadsheetApp.getUi().ButtonSet.OK);
+  SpreadsheetApp.getActive().toast(result);
+} */
 
-function onEdit(e) { 
-      handleSheetNameChange();
-      if (e && priorityArray.includes(activeCellValue)) {
-          handlePriorityLevelChange(activeCellValue)
-        } else {
-          handleSyncCellValueByTaskId(activeCellValue)
-        }
+function onEdit(e) {
+      if (activeSheetName !== completedSheet) {
+          handleSheetNameChange();
+
+          if (e && priorityArray.includes(activeCellValue)) {
+            handlePriorityLevelChange(activeCellValue)
+          } else {
+            handleSyncCellValueByTaskId(activeCellValue)
+          }
+      }
     }
