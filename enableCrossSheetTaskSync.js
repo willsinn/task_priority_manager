@@ -1,8 +1,10 @@
-const mainSheet = "task_priority_manager";
-const completedSheet = "completed_tasks"
+const main_sheet = "task_priority_manager";
+const completed_sheet = "completed_tasks"
 const priorityArray = ["Critical", "High", "Medium", "Low"];
+const tSheet = (name) => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
 
-const prioritySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(mainSheet);
+
+const prioritySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(main_sheet);
 const prioritySheetColA = prioritySheet.getRange('A:A').getValues();
 const prioritySheetTaskCountCell = prioritySheet.getRange('A2');
 
@@ -14,6 +16,7 @@ const activeCellValue = activeCell.getValue();
 const activeRowIdx = activeCell.getRowIndex();
 const activeColIdx = activeCell.getColumnIndex();
 const activeSheetColA_values = activeSheet.getRange('A:A').getValues();
+const activeMaxCols = activeSheet.getMaxColumns();
 
 const handleUpdateIDsOnSheetNameChange = () => activeSheetColA_values.map((tId, idx) => { //map through all existing IDs and update them to match the new sheet name
       if (idx > 1 && tId[0]) { //skip first two rows
@@ -48,7 +51,7 @@ const handleUpdatePriorityIds = () => prioritySheetColA.map((pId, idx) => {
 })
 
 function handleSheetNameChange() {
-      if (activeSheetName !== mainSheet && activeSheetName !== activeSheetCellA1Value) {
+      if (activeSheetName !== main_sheet && activeSheetName !== activeSheetCellA1Value) {
         handleUpdateIDsOnSheetNameChange();
         handleUpdatePriorityIds();
         handleUpdateCellA1();
@@ -57,8 +60,7 @@ function handleSheetNameChange() {
 
 function handleCopyNewTaskToPriorityManager(tId) {
     if (tId) {
-      const numCols = activeSheet.getMaxColumns();
-      const newTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, numCols);
+      const newTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols);
       const newTaskValues = newTaskRow.getValues()
       const getPrioSheetRowIdx = prioritySheet.getLastRow();
       prioritySheet.insertRowAfter(getPrioSheetRowIdx); //insert new row
@@ -74,7 +76,7 @@ function handleSyncCellValueByTaskId(newVal) {
           const valProjectName = valTaskId.slice(0, -9); //slice off __#######
           let targetSheet;
 
-          if (activeSheetName === mainSheet) { // IF ANY values on the priority page are edited, this script will UPDATE corresponding PROJECT SHEET values to match the changes
+          if (activeSheetName === main_sheet) { // IF ANY values on the priority page are edited, this script will UPDATE corresponding PROJECT SHEET values to match the changes
             targetSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(valProjectName);
           } else { // IF ANY values on the project page are edited, this script will UPDATE the PRIORITY SHEET values to match the changes
             targetSheet = prioritySheet;
@@ -119,9 +121,15 @@ function alertMessageOKButton() {
 
 function handleCompletedTask() {
   // alertMessageOKButton();
+      const completedSheet = tSheet(completed_sheet);
+      const completedTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols);
+      const completedTaskValues = completedTaskRow.getValues()
+      const getCompletedSheetLastRowIdx = completedSheet.getLastRow();
+      completedSheet.insertRowAfter(getCompletedSheetLastRowIdx); //insert new row
+      completedSheet.getRange(getCompletedSheetLastRowIdx + 1, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
 }
 function onEdit(e) {
-      if (e && activeSheetName === completedSheet) { // checks if user is editing the completed sheet
+      if (e && activeSheetName === completed_sheet) { // checks if user is editing the completed sheet
       } 
       else {
           handleSheetNameChange();
