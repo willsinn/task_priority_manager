@@ -112,19 +112,28 @@ function handlePriorityLevelChange(prioLvl) {
           handleSyncCellValueByTaskId(prioLvl)
       }
 }
-/* function alertMessageOKButton() {
+function alertMessageOKButton() {
   const result = SpreadsheetApp.getUi().alert("Alert message", SpreadsheetApp.getUi().ButtonSet.OK);
   SpreadsheetApp.getActive().toast(result);
-} */
+} 
 
+function handleCompletedTask() {
+  // alertMessageOKButton();
+}
 function onEdit(e) {
-      if (activeSheetName !== completedSheet) {
+      if (e && activeSheetName === completedSheet) { // checks if user is editing the completed sheet
+      } 
+      else {
           handleSheetNameChange();
-
-          if (e && priorityArray.includes(activeCellValue)) {
+          if (priorityArray.includes(activeCellValue)) {
             handlePriorityLevelChange(activeCellValue)
-          } else {
+          } 
+          else if (activeCellValue === true) {
+            handleCompletedTask()
+          } 
+          else {
             handleSyncCellValueByTaskId(activeCellValue)
           }
-      }
-    }
+        }       
+  }
+    
