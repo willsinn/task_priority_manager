@@ -118,12 +118,16 @@ function alertMessageOKButton(val) {
   const result = SpreadsheetApp.getUi().alert(`${val}`, SpreadsheetApp.getUi().ButtonSet.OK);
   SpreadsheetApp.getActive().toast(result);
 } 
-function copyTaskToCompletedSheet() {
+function copyTaskToCompletedSheet(sName) {
       const completedSheet = tSheet(completed_sheet);
-      const completedTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols);
-      const completedTaskValues = completedTaskRow.getValues()
+      const completedTaskValues = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols).getValues();
       const getCompletedSheetLastRowIdx = completedSheet.getLastRow();
       completedSheet.insertRowAfter(getCompletedSheetLastRowIdx); //insert new row
+            
+      if (sName === activeSheetName) {
+        completedTaskValues[0].splice(1, 0, activeSheetName);
+      } 
+
       completedSheet.getRange(getCompletedSheetLastRowIdx + 1, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
 }
 function deleteCompletedTaskFromSheet(name, taskId) {
@@ -144,13 +148,12 @@ function deleteCompletedTaskFromSheet(name, taskId) {
       }
 }
 function handleCompleteTask() {
-      copyTaskToCompletedSheet();
       const taskId = activeSheet.getRange(`A${ activeRowIdx }`).getValue();
       const projectName = taskId.slice(0, -9); //slice off __#######
+      copyTaskToCompletedSheet(projectName);
       deleteCompletedTaskFromSheet(projectName, taskId);
       deleteCompletedTaskFromSheet(main_sheet, taskId);
-
-
+      
 }
 function onEdit(e) {
       if (e && activeSheetName === completed_sheet) { // checks if user is editing the completed sheet
