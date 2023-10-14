@@ -21,8 +21,8 @@ const activeMaxCols = activeSheet.getMaxColumns();
 const handleUpdateIDsOnSheetNameChange = () => activeSheetColA_values.map((tId, idx) => { //map through all existing IDs and update them to match the new sheet name
       if (idx > 1 && tId[0]) { //skip first two rows
           const getIdParts = tId[0].split("__", 2);
-            const newId = `${activeSheetName}` + '__' + `${getIdParts[1]}`;
-            const targetCell = activeSheet.getRange(`A${parseInt(idx+1)}`)
+            const newId = `${activeSheetName}` + '__' + `${ getIdParts[1] }`;
+            const targetCell = activeSheet.getRange(`A${ parseInt( idx + 1 ) }`)
             targetCell.setValue(newId);
       }  
     })
@@ -41,9 +41,9 @@ const handleUpdatePriorityIds = () => prioritySheetColA.map((pId, idx) => {
     if (idx > 1 && pId[0]) {
     const getIdParts = pId[0].split("__", 2);
         if (getIdParts[0] == activeSheetCellA1Value) {
-            const newId = `${activeSheetName}` + '__' + `${getIdParts[1]}`;
-            const targetCell = prioritySheet.getRange(`A${parseInt(idx+1)}`)
-            const projectCell = prioritySheet.getRange(`B${parseInt(idx+1)}`)
+            const newId = `${activeSheetName}` + '__' + `${ getIdParts[1] }`;
+            const targetCell = prioritySheet.getRange(`A${ parseInt( idx+1 ) }`)
+            const projectCell = prioritySheet.getRange(`B${ parseInt( idx+1 ) }`)
             targetCell.setValue(newId);
             projectCell.setValue(activeSheetName)
         }
@@ -60,7 +60,7 @@ function handleSheetNameChange() {
 
 function handleCopyNewTaskToPriorityManager(tId) {
     if (tId) {
-      const newTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols);
+      const newTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols) ;
       const newTaskValues = newTaskRow.getValues()
       const getPrioSheetRowIdx = prioritySheet.getLastRow();
       prioritySheet.insertRowAfter(getPrioSheetRowIdx); //insert new row
@@ -114,13 +114,11 @@ function handlePriorityLevelChange(prioLvl) {
           handleSyncCellValueByTaskId(prioLvl)
       }
 }
-function alertMessageOKButton() {
-  const result = SpreadsheetApp.getUi().alert("Alert message", SpreadsheetApp.getUi().ButtonSet.OK);
+function alertMessageOKButton(val) {
+  const result = SpreadsheetApp.getUi().alert(`${val}`, SpreadsheetApp.getUi().ButtonSet.OK);
   SpreadsheetApp.getActive().toast(result);
 } 
-
-function handleCompletedTask() {
-  // alertMessageOKButton();
+function copyTaskToCompletedSheet() {
       const completedSheet = tSheet(completed_sheet);
       const completedTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols);
       const completedTaskValues = completedTaskRow.getValues()
@@ -128,19 +126,45 @@ function handleCompletedTask() {
       completedSheet.insertRowAfter(getCompletedSheetLastRowIdx); //insert new row
       completedSheet.getRange(getCompletedSheetLastRowIdx + 1, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
 }
+function deleteCompletedTaskFromSheet(name, taskId) {
+      const sheetIds = tSheet(name).getRange('A:A').getValues();
+      const errorMsg = "task_id doesn't match on" +`${name}` + "sheet, please report to dev";
+      const task = {};
+      sheetIds.forEach((tId, index) => {
+          if (tId[0] && index > 1 && tId[0] === taskId) {
+            task.id = tId[0];
+            task.rowIdx = index + 1;
+          }
+      })
+      if (task.id === taskId) {
+        tSheet(name).deleteRow(task.rowIdx)
+      } 
+      else {
+        alertMessageOKButton(errorMsg)
+      }
+}
+function handleCompleteTask() {
+      copyTaskToCompletedSheet();
+      const taskId = activeSheet.getRange(`A${ activeRowIdx }`).getValue();
+      const projectName = taskId.slice(0, -9); //slice off __#######
+      deleteCompletedTaskFromSheet(projectName, taskId);
+      deleteCompletedTaskFromSheet(main_sheet, taskId);
+
+
+}
 function onEdit(e) {
       if (e && activeSheetName === completed_sheet) { // checks if user is editing the completed sheet
       } 
       else {
           handleSheetNameChange();
           if (priorityArray.includes(activeCellValue)) {
-            handlePriorityLevelChange(activeCellValue)
+            handlePriorityLevelChange(activeCellValue);
           } 
           else if (activeCellValue === true) {
-            handleCompletedTask()
+            handleCompleteTask();
           } 
           else {
-            handleSyncCellValueByTaskId(activeCellValue)
+            handleSyncCellValueByTaskId(activeCellValue);
           }
         }       
   }
