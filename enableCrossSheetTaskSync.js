@@ -2,7 +2,7 @@ const main_sheet = "task_priority_manager";
 const completed_sheet = "completed_tasks"
 const priorityArray = ["Critical", "High", "Medium", "Low"];
 const tSheet = (name) => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
-
+const insertRowIdx = 3;
 
 const prioritySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(main_sheet);
 const prioritySheetColA = prioritySheet.getRange('A:A').getValues();
@@ -62,10 +62,9 @@ function handleCopyNewTaskToPriorityManager(tId) {
     if (tId) {
       const newTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols) ;
       const newTaskValues = newTaskRow.getValues()
-      const getPrioSheetRowIdx = prioritySheet.getLastRow();
-      prioritySheet.insertRowAfter(getPrioSheetRowIdx); //insert new row
+      prioritySheet.insertRowBefore(insertRowIdx); //insert new row
       newTaskValues[0].splice(1, 0, activeSheetName);
-      prioritySheet.getRange(getPrioSheetRowIdx + 1, 1, 1, newTaskValues[0].length).setValues(newTaskValues)
+      prioritySheet.getRange(insertRowIdx, 1, 1, newTaskValues[0].length).setValues(newTaskValues)
     }
 }
 
@@ -121,14 +120,13 @@ function alertMessageOKButton(val) {
 function copyTaskToCompletedSheet(sName) {
       const completedSheet = tSheet(completed_sheet);
       const completedTaskValues = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols).getValues();
-      const getCompletedSheetLastRowIdx = completedSheet.getLastRow();
-      completedSheet.insertRowAfter(getCompletedSheetLastRowIdx); //insert new row
+      completedSheet.insertRowBefore(insertRowIdx); //insert new row
             
       if (sName === activeSheetName) {
         completedTaskValues[0].splice(1, 0, activeSheetName);
       } 
 
-      completedSheet.getRange(getCompletedSheetLastRowIdx + 1, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
+      completedSheet.getRange(insertRowIdx, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
 }
 function deleteCompletedTaskFromSheet(name, taskId) {
       const sheetIds = tSheet(name).getRange('A:A').getValues();
@@ -161,16 +159,16 @@ function handleRestoreCompletedTask() {
       const completedTaskValues = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols).getValues();
       
       if (completedTaskValues[0][0]) {
-        const getPrioritySheetLastRowIdx = prioritySheet.getLastRow();
-        prioritySheet.insertRowAfter(getPrioritySheetLastRowIdx);
+        prioritySheet.insertRowBefore(insertRowIdx);
 
-        prioritySheet.getRange(getPrioritySheetLastRowIdx + 1, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
+        prioritySheet.getRange(insertRowIdx, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
 
         completedTaskValues[0].splice(1, 1) //remove the project column
         const projectName = completedTaskValues[0][0].slice(0, -9)
         const projectSheet = tSheet(projectName);
-        const getProjectSheetLastRowIdx = projectSheet.getLastRow();
-        projectSheet.getRange(getProjectSheetLastRowIdx + 1, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
+        
+        projectSheet.insertRowBefore(insertRowIdx); //insert new row
+        projectSheet.getRange(insertRowIdx, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
         
         tSheet(completed_sheet).deleteRow(activeRowIdx) // remove row from completed
       }
