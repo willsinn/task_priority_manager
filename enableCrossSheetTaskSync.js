@@ -51,7 +51,7 @@ const handleUpdatePriorityIds = () => prioritySheetColA.map((pId, idx) => {
 })
 
 function handleSheetNameChange() {
-      if (activeSheetName !== main_sheet && activeSheetName !== activeSheetCellA1Value) {
+      if (activeSheetName !== completed_sheet && activeSheetName !== main_sheet && activeSheetName !== activeSheetCellA1Value) {
         handleUpdateIDsOnSheetNameChange();
         handleUpdatePriorityIds();
         handleUpdateCellA1();
@@ -148,15 +148,36 @@ function deleteCompletedTaskFromSheet(name, taskId) {
       }
 }
 function handleCompleteTask() {
-      const taskId = activeSheet.getRange(`A${ activeRowIdx }`).getValue();
-      const projectName = taskId.slice(0, -9); //slice off __#######
-      copyTaskToCompletedSheet(projectName);
-      deleteCompletedTaskFromSheet(projectName, taskId);
-      deleteCompletedTaskFromSheet(main_sheet, taskId);
+      if (activeSheetName !== completed_sheet) {
+        const taskId = activeSheet.getRange(`A${ activeRowIdx }`).getValue();
+        const projectName = taskId.slice(0, -9); //slice off __#######
+        copyTaskToCompletedSheet(projectName);
+        deleteCompletedTaskFromSheet(projectName, taskId);
+        deleteCompletedTaskFromSheet(main_sheet, taskId);
+      }
+}
+
+function handleRestoreCompletedTask() {
+      const completedTaskValues = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols).getValues();
       
+      if (completedTaskValues[0][0]) {
+        const getPrioritySheetLastRowIdx = prioritySheet.getLastRow();
+        prioritySheet.insertRowAfter(getPrioritySheetLastRowIdx);
+
+        prioritySheet.getRange(getPrioritySheetLastRowIdx + 1, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
+
+        completedTaskValues[0].splice(1, 1) //remove the project column
+        const projectName = completedTaskValues[0][0].slice(0, -9)
+        const projectSheet = tSheet(projectName);
+        const getProjectSheetLastRowIdx = projectSheet.getLastRow();
+        projectSheet.getRange(getProjectSheetLastRowIdx + 1, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
+        
+        tSheet(completed_sheet).deleteRow(activeRowIdx) // remove row from completed
+      }
 }
 function onEdit(e) {
-      if (e && activeSheetName === completed_sheet) { // checks if user is editing the completed sheet
+      if (e && activeSheetName === completed_sheet && activeCellValue === false) { // checks if user is editing the completed sheet
+          handleRestoreCompletedTask(); 
       } 
       else {
           handleSheetNameChange();
