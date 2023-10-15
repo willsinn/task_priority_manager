@@ -1,8 +1,14 @@
 const main_sheet = "task_priority_manager";
 const completed_sheet = "completed_tasks"
 const priorityArray = ["Critical", "High", "Medium", "Low"];
-const tSheet = (name) => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
 const insertRowIdx = 3;
+
+
+
+const targSheet = (name) => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+
+
+
 
 const prioritySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(main_sheet);
 const prioritySheetColA = prioritySheet.getRange('A:A').getValues();
@@ -118,7 +124,7 @@ function alertMessageOKButton(val) {
   SpreadsheetApp.getActive().toast(result);
 } 
 function copyTaskToCompletedSheet(sName) {
-      const completedSheet = tSheet(completed_sheet);
+      const completedSheet = targSheet(completed_sheet);
       const completedTaskValues = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols).getValues();
       completedSheet.insertRowBefore(insertRowIdx); //insert new row
             
@@ -129,7 +135,7 @@ function copyTaskToCompletedSheet(sName) {
       completedSheet.getRange(insertRowIdx, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
 }
 function deleteCompletedTaskFromSheet(name, taskId) {
-      const sheetIds = tSheet(name).getRange('A:A').getValues();
+      const sheetIds = targSheet(name).getRange('A:A').getValues();
       const errorMsg = "task_id doesn't match on" +`${name}` + "sheet, please report to dev";
       const task = {};
       sheetIds.forEach((tId, index) => {
@@ -139,7 +145,7 @@ function deleteCompletedTaskFromSheet(name, taskId) {
           }
       })
       if (task.id === taskId) {
-        tSheet(name).deleteRow(task.rowIdx)
+        targSheet(name).deleteRow(task.rowIdx)
       } 
       else {
         alertMessageOKButton(errorMsg)
@@ -165,12 +171,39 @@ function handleRestoreCompletedTask() {
 
         completedTaskValues[0].splice(1, 1) //remove the project column
         const projectName = completedTaskValues[0][0].slice(0, -9)
-        const projectSheet = tSheet(projectName);
+        const projectSheet = targSheet(projectName);
         
         projectSheet.insertRowBefore(insertRowIdx); //insert new row
         projectSheet.getRange(insertRowIdx, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
         
-        tSheet(completed_sheet).deleteRow(activeRowIdx) // remove row from completed
+        targSheet(completed_sheet).deleteRow(activeRowIdx) // remove row from completed
+      }
+}
+function sortByPriortyThenDueDate() {
+      const headerValue = activeSheet.getRange(2, activeSheet.getActiveCell().getColumnIndex()).getValue();
+
+      if (priorityArray.includes(activeCellValue) || headerValue === "Due Date") {
+        const priority = {
+            critical: 0,
+            high: 1,
+            medium: 2,
+            low: 3,
+          }
+        const data = prioritySheet.getRange('A3:I').getValues();
+        data.sort((a, b) => {
+          const aOrder = priority[a[3].toLowerCase()];
+          const bOrder = priority[b[3].toLowerCase()];
+          const aDueDate = a[6];
+          const bDueDate = b[6];
+
+          if (aOrder < bOrder) return -1;
+          if (aOrder > bOrder) return 1;
+          if (aOrder === bOrder) {
+              if (!bDueDate || aDueDate < bDueDate) return -1;
+              if (!aDueDate || aDueDate > bDueDate) return 1;
+          }
+        })
+        prioritySheet.getRange('A3:I').setValues(data);
       }
 }
 function onEdit(e) {
@@ -181,6 +214,7 @@ function onEdit(e) {
           handleSheetNameChange();
           if (priorityArray.includes(activeCellValue)) {
             handlePriorityLevelChange(activeCellValue);
+            sortByPriortyThenDueDate();
           } 
           else if (activeCellValue === true) {
             handleCompleteTask();
@@ -188,6 +222,9 @@ function onEdit(e) {
           else {
             handleSyncCellValueByTaskId(activeCellValue);
           }
-        }       
+          sortByPriortyThenDueDate();
+
+        }
+
   }
     
