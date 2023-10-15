@@ -24,6 +24,21 @@ const activeColIdx = activeCell.getColumnIndex();
 const activeSheetColA_values = activeSheet.getRange('A:A').getValues();
 const activeMaxCols = activeSheet.getMaxColumns();
 
+
+
+
+function allSheetNames() {
+  const ss = SpreadsheetApp.getActive();
+  const sheets = ss.getSheets();
+  const namesArr = [];
+  sheets.forEach((sheet) => {
+    const name = sheet.getName();
+    if (main_sheet !== name && completed_sheet !== name) {
+      namesArr.push(name);
+    }
+  });
+  return namesArr;
+}
 const handleUpdateIDsOnSheetNameChange = () => activeSheetColA_values.map((tId, idx) => { //map through all existing IDs and update them to match the new sheet name
       if (idx > 1 && tId[0]) { //skip first two rows
           const getIdParts = tId[0].split("__", 2);
@@ -102,7 +117,17 @@ function handleSyncCellValueByTaskId(newVal) {
         }
 }
 
-function handleCreateUniqueTaskID(cell) {
+function handleMainSheetCreateTask(cell) {
+      const isProjectCell = activeSheet.getRange(`B${activeRowIdx}`);
+      const projectNames = allSheetNames();
+      const errorMsg = `ADD VALID PROJECT NAME IN CELL B${activeRowIdx}:  ` + `[ ${projectNames.join(" ]  [ ")} ]`
+
+      if (!projectNames.includes(isProjectCell)) {
+        activeCell.setValue("")
+        alertMessageWithOKButton(errorMsg)
+      }
+}
+function createUniqueTaskId(cell) {
     const taskCount = prioritySheetTaskCountCell.getValue();
         const taskId = `${activeSheetName}` + "__" + `${taskCount}`;
         handleUpdateMainTaskCountCellA2(taskCount)
@@ -114,12 +139,16 @@ function handlePriorityLevelChange(prioLvl) {
       const activeIdCell = activeSheet.getRange(`A${activeRowIdx}`);
       const activeIdValue = activeIdCell.getValue();
       if (!activeIdValue) {
-          handleCreateUniqueTaskID(activeIdCell)
+          if (activeSheetName === main_sheet) {
+            handleMainSheetCreateTask(activeIdCell);
+          } else {
+            createUniqueTaskId(activeIdCell)
+          }
       } else {
           handleSyncCellValueByTaskId(prioLvl)
       }
 }
-function alertMessageOKButton(val) {
+function alertMessageWithOKButton(val) {
   const result = SpreadsheetApp.getUi().alert(`${val}`, SpreadsheetApp.getUi().ButtonSet.OK);
   SpreadsheetApp.getActive().toast(result);
 } 
@@ -148,7 +177,7 @@ function deleteCompletedTaskFromSheet(name, taskId) {
         targSheet(name).deleteRow(task.rowIdx)
       } 
       else {
-        alertMessageOKButton(errorMsg)
+        alertMessageWithOKButton(errorMsg)
       }
 }
 function handleCompleteTask() {
@@ -214,7 +243,6 @@ function onEdit(e) {
           handleSheetNameChange();
           if (priorityArray.includes(activeCellValue)) {
             handlePriorityLevelChange(activeCellValue);
-            sortByPriortyThenDueDate();
           } 
           else if (activeCellValue === true) {
             handleCompleteTask();
