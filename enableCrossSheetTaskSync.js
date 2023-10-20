@@ -1,5 +1,5 @@
 const main_sheet = "task_priority_manager";
-const completed_sheet = "completed_tasks"
+const completed_sheet = "completed_tasks";
 const priorityArray = ["Critical", "High", "Medium", "Low"];
 const insertRowIdx = 3;
 
@@ -120,7 +120,7 @@ function handleSyncCellValueByTaskId(newVal) {
 function handleMainSheetCreateTask(cell) {
       const isProjectCell = activeSheet.getRange(`B${activeRowIdx}`);
       const projectNames = allSheetNames();
-      const errorMsg = `ADD VALID PROJECT NAME IN CELL B${activeRowIdx}:  ` + `[ ${projectNames.join(" ]  [ ")} ]`
+      const errorMsg = `Error! Could not create task due to invalid project name in cell B-${activeRowIdx}. The value needs to be an exact match to ONE sheet's name, please update cell B-${activeRowIdx} with one of following sheet names to continue: ` + `'${projectNames.join("',  '")}'`
 
       if (!projectNames.includes(isProjectCell)) {
         activeCell.setValue("")
