@@ -252,18 +252,16 @@ function sortByPriortyThenDueDate() {
             low: 3,
           }
         const data = prioritySheet.getRange('A3:I').getValues();
-        data.sort((a, b) => {
+        data.sort((a, b) => { // SORTS BY PRIORITY LEVEL THEN DATE. EMPTY DATE FIELDS WILL ALWAYS END UP ON TOP
           const aOrder = priority[a[3].toLowerCase()];
           const bOrder = priority[b[3].toLowerCase()];
           const aDueDate = a[6];
           const bDueDate = b[6];
-
-          if (aOrder < bOrder) return -1;
-          if (aOrder > bOrder) return 1;
-          if (aOrder === bOrder) {
-              if (!bDueDate || aDueDate < bDueDate) return -1;
-              if (!aDueDate || aDueDate > bDueDate) return 1;
-          }
+              let n = aOrder - bOrder;
+              if (n !== 0) {
+                  return n;
+              }
+              return aDueDate - bDueDate;
         })
         prioritySheet.getRange('A3:I').setValues(data);
       }
