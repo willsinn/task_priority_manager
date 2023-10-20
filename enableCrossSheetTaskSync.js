@@ -161,10 +161,13 @@ function createUniqueTaskId(cell) {
         handleCopyNewTaskToPriorityManager(taskId); 
   }
 
-  function setLastUpdatedValue(sheet, maxCols, rowIdx) {
-    const lastUpdatedCol = sheet.getRange(rowIdx, maxCols)
-    lastUpdatedCol.setValue(currDateTime)
+function setLastUpdatedValue(sheet, maxCols, rowIdx) {
+    if (rowIdx > 2) {
+      const lastUpdatedCol = sheet.getRange(rowIdx, maxCols)
+      lastUpdatedCol.setValue(currDateTime)
+    }
 }
+
 function handlePriorityLevelChange(prioLvl) {
       const activeIdCell = activeSheet.getRange(`A${activeRowIdx}`);
       const activeIdValue = activeIdCell.getValue();
