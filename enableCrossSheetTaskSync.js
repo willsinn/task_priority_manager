@@ -2,11 +2,12 @@ const main_sheet = "task_priority_manager";
 const completed_sheet = "completed_tasks";
 const priorityArray = ["Critical", "High", "Medium", "Low"];
 const insertRowIdx = 3;
+const projectNames = allSheetNames();
 
 
 
 const targSheet = (name) => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
-
+const grabActiveCell = (str) => SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange(str);
 
 
 
@@ -117,14 +118,40 @@ function handleSyncCellValueByTaskId(newVal) {
         }
 }
 
-function handleMainSheetCreateTask(cell) {
-      const isProjectCell = activeSheet.getRange(`B${activeRowIdx}`);
-      const projectNames = allSheetNames();
-      const errorMsg = `Error! Could not create task due to invalid project name in cell B-${activeRowIdx}. The value needs to be an exact match to ONE sheet's name, please update cell B-${activeRowIdx} with one of following sheet names to continue: ` + `'${projectNames.join("',  '")}'`
+function copyNewTaskToProjectSheet(name) {
+        const newTaskValues = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols).getValues();
+        const projectSheet = targSheet(name);
 
-      if (!projectNames.includes(isProjectCell)) {
+        projectSheet.insertRowBefore(insertRowIdx)
+        newTaskValues[0].splice(1, 1); // REMOVE THE EXTRA PROJECT COLUMN
+        
+        
+        
+        const taskCount = prioritySheetTaskCountCell.getValue();
+        const taskId = `${name}` + "__" + `${taskCount}`;
+        newTaskValues[0].splice(0, 1, taskId); // ADD NEW ID VALUE ONTO SHEET
+
+        projectSheet.getRange(insertRowIdx, 1, 1, newTaskValues[0].length).setValues(newTaskValues)
+        const mainTaskIdCell = grabActiveCell(`A${activeRowIdx}`)
+        mainTaskIdCell.setValue(taskId)
+
+        handleUpdateMainTaskCountCellA2(taskCount)
+
+
+}
+
+function handleMainSheetCreateTask(cell) {
+      const errorMsg = `Error! Could not create task due to invalid project name in cell B-${activeRowIdx}. The value needs to be an exact match to ONE sheet's name, please update cell B-${activeRowIdx} with one of following sheet names to continue: ` + `'${projectNames.join("',  '")}'`
+      const currCellVal = activeSheet.getRange(`B${activeRowIdx}`).getValue();
+
+      if (!projectNames.includes(currCellVal)) {
         activeCell.setValue("")
         alertMessageWithOKButton(errorMsg)
+      } else {
+
+        copyNewTaskToProjectSheet(currCellVal);
+
+
       }
 }
 function createUniqueTaskId(cell) {
