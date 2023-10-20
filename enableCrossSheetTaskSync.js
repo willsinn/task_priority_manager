@@ -8,7 +8,7 @@ const projectNames = allSheetNames();
 
 const targSheet = (name) => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
 const grabActiveCell = (str) => SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange(str);
-
+const currDateTime = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(main_sheet).getRange('I1').getValue().toString();
 
 
 const prioritySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(main_sheet);
@@ -115,6 +115,7 @@ function handleSyncCellValueByTaskId(newVal) {
           const targetTaskColIdx = targetHeaders[0].indexOf(valColHeader);
           const targetSheetCell = targetSheet.getRange(rowArray[0]+1, targetTaskColIdx + 1)
           targetSheetCell.setValue(newVal)
+          setLastUpdatedValue(targetSheet, targetSheetMaxCols, rowArray[0]+1) // updates the TARGET SHEET's last updated value
         }
 }
 
@@ -140,7 +141,7 @@ function copyNewTaskToProjectSheet(name) {
 
 }
 
-function handleMainSheetCreateTask(cell) {
+function handleMainSheetCreateTask() {
       const errorMsg = `Error! Could not create task due to invalid project name in cell B-${activeRowIdx}. The value needs to be an exact match to ONE sheet's name, please update cell B-${activeRowIdx} with one of following sheet names to continue: ` + `'${projectNames.join("',  '")}'`
       const currCellVal = activeSheet.getRange(`B${activeRowIdx}`).getValue();
 
@@ -148,10 +149,7 @@ function handleMainSheetCreateTask(cell) {
         activeCell.setValue("")
         alertMessageWithOKButton(errorMsg)
       } else {
-
         copyNewTaskToProjectSheet(currCellVal);
-
-
       }
 }
 function createUniqueTaskId(cell) {
@@ -162,12 +160,17 @@ function createUniqueTaskId(cell) {
         handleUpdatePriorityIds();
         handleCopyNewTaskToPriorityManager(taskId); 
   }
+
+  function setLastUpdatedValue(sheet, maxCols, rowIdx) {
+    const lastUpdatedCol = sheet.getRange(rowIdx, maxCols)
+    lastUpdatedCol.setValue(currDateTime)
+}
 function handlePriorityLevelChange(prioLvl) {
       const activeIdCell = activeSheet.getRange(`A${activeRowIdx}`);
       const activeIdValue = activeIdCell.getValue();
       if (!activeIdValue) {
           if (activeSheetName === main_sheet) {
-            handleMainSheetCreateTask(activeIdCell);
+            handleMainSheetCreateTask();
           } else {
             createUniqueTaskId(activeIdCell)
           }
@@ -263,6 +266,7 @@ function sortByPriortyThenDueDate() {
       }
 }
 function onEdit(e) {
+      setLastUpdatedValue(activeSheet, activeMaxCols, activeRowIdx) // updates the ACTIVE SHEET's last updated value
       if (e && activeSheetName === completed_sheet && activeCellValue === false) { // checks if user is editing the completed sheet
           handleRestoreCompletedTask(); 
       } 
@@ -270,12 +274,15 @@ function onEdit(e) {
           handleSheetNameChange();
           if (priorityArray.includes(activeCellValue)) {
             handlePriorityLevelChange(activeCellValue);
+          
           } 
           else if (activeCellValue === true) {
             handleCompleteTask();
+          
           } 
           else {
             handleSyncCellValueByTaskId(activeCellValue);
+          
           }
           sortByPriortyThenDueDate();
 
