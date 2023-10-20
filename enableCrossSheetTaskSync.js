@@ -252,7 +252,7 @@ function sortByPriortyThenDueDate() {
             low: 3,
           }
         const data = prioritySheet.getRange('A3:I').getValues();
-        data.sort((a, b) => { // SORTS BY PRIORITY LEVEL THEN DATE. EMPTY DATE FIELDS WILL ALWAYS END UP ON TOP
+        data.sort((a, b) => { // SORTS BY PRIORITY LEVEL THEN DATE.
           const aOrder = priority[a[3].toLowerCase()];
           const bOrder = priority[b[3].toLowerCase()];
           const aDueDate = a[6];
@@ -261,6 +261,13 @@ function sortByPriortyThenDueDate() {
               if (n !== 0) {
                   return n;
               }
+
+              /* // COMMENT THIS CONDITIONAL IN TO GROUP ALL DATELESS TASKS BELOW DATED TASKS, KEEP IT COMMENTED OUT TO GROUP DATELESS TASKS ABOVE DATED TASKS 
+                if(!bDueDate || !aDueDate){
+                return bDueDate - aDueDate
+              } 
+              */
+
               return aDueDate - bDueDate;
         })
         prioritySheet.getRange('A3:I').setValues(data);
