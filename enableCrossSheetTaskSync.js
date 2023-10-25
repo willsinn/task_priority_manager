@@ -36,9 +36,11 @@ const activeIdValue = activeIdCell.getValue();
 
 
 
-
-function handleCompleteInputValue() {
-      let isComplete = activeCellValue;
+function copyRowAcrossSheets() {
+  
+}
+function handleCompleteInputValue(value) {
+      // let isComplete = ;
       
 }
 function allSheetNames() {
