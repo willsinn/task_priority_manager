@@ -14,7 +14,8 @@ const priorityLevelKeys = Object.keys(PRIORITY_LEVELS)
 const allProjectNames = allSheetNames();
 const targSheet = (name) => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
 const grabActiveCell = (str) => SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange(str);
-const currDateTime = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MAIN_SHEET_NAME).getRange('I1').getValue().toString();
+const getCurrentDateTimestampValue = () => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MAIN_SHEET_NAME).getRange('I1').getValue().toString();
+const getNewActiveCellValue = () => SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getActiveCell().getValue();
 
 
 const prioritySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MAIN_SHEET_NAME);
@@ -25,16 +26,21 @@ const activeSheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 const activeSheetName = activeSheet.getName();
 const activeSheetCellA1Value = activeSheet.getRange('A1').getValue();
 const activeCell = activeSheet.getActiveCell();
-const activeCellValue = activeCell.getValue();
 const activeRowIdx = activeCell.getRowIndex();
 const activeColIdx = activeCell.getColumnIndex();
 const activeSheetColA_values = activeSheet.getRange('A:A').getValues();
 const activeMaxCols = activeSheet.getMaxColumns();
-      const activeIdCell = activeSheet.getRange(`A${activeRowIdx}`);
-      const activeIdValue = activeIdCell.getValue();
+const activeIdCell = activeSheet.getRange(`A${activeRowIdx}`);
+const activeIdValue = activeIdCell.getValue();
 
 
 
+
+
+function handleCompleteInputValue() {
+      let isComplete = activeCellValue;
+      
+}
 function allSheetNames() {
   const ss = SpreadsheetApp.getActive();
   const sheets = ss.getSheets();
@@ -149,7 +155,6 @@ function copyNewTaskToProjectSheet(name) {
 
         handleUpdateMainTaskCountCellA2(taskCount)
 
-
 }
 
 function handleMainSheetCreateTask() {
@@ -173,9 +178,10 @@ function createUniqueTaskId(cell) {
   }
 
 function setLastUpdatedValue(sheet, maxCols, rowIdx) {
-    if (rowIdx > 2) {
+    let timestamp = getCurrentDateTimestampValue();
+    if (timestamp && rowIdx > 2) {
       const lastUpdatedCol = sheet.getRange(rowIdx, maxCols)
-      lastUpdatedCol.setValue(currDateTime)
+      lastUpdatedCol.setValue(timestamp)
     }
 }
 
@@ -254,10 +260,10 @@ function handleRestoreCompletedTask() {
         targSheet(COMPLETED_SHEET_NAME).deleteRow(activeRowIdx) // remove row from completed
       }
 }
-function sortByPriortyThenDueDate() {
+function sortByPriortyThenDueDate(val) {
       const headerValue = activeSheet.getRange(2, activeSheet.getActiveCell().getColumnIndex()).getValue();
 
-      if (priorityLevelKeys.includes(activeCellValue) || headerValue === "Due Date") {
+      if (priorityLevelKeys.includes(val) || headerValue === "Due Date") {
         const headers = prioritySheet.getRange(2, 1, 1, activeMaxCols).getValues().flat();
         const prioIdx = headers.indexOf(PRIO_LVLS_COL_NAME);
         const dueDateIdx = headers.indexOf(DUE_DATE_COL_NAME)
@@ -284,26 +290,28 @@ function sortByPriortyThenDueDate() {
       }
 }
 function onEdit(e) {
+      let newValue = getNewActiveCellValue();
+
       // setLastUpdatedValue(activeSheet, activeMaxCols, activeRowIdx) // updates the ACTIVE SHEET's last updated value
-      if (e && activeSheetName === COMPLETED_SHEET_NAME && activeCellValue === false) { // checks if user is editing the completed sheet
+      if (e && activeSheetName === COMPLETED_SHEET_NAME && newValue === false) { // checks if user is editing the completed sheet
           handleRestoreCompletedTask(); 
       } 
       else {
 
           handleSheetNameChange();
-          if (priorityLevelKeys.includes(activeCellValue)) {
-            handlePriorityLevelChange(activeCellValue);
+          if (priorityLevelKeys.includes(newValue)) {
+            handlePriorityLevelChange(newValue);
           
           } 
-          else if (activeCellValue === true) {
+          else if (newValue === true) {
             handleCompleteTask();
           
           } 
           else {
-            handleSyncCellValueByTaskId(activeCellValue);
+            handleSyncCellValueByTaskId(newValue);
           
           }
-          sortByPriortyThenDueDate(priorityLevelKeys);
+          sortByPriortyThenDueDate(newValue);
 
         }
 
