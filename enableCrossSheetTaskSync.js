@@ -36,8 +36,8 @@ const activeIdValue = activeIdCell.getValue();
 
 
 
-function copyRowAcrossSheets() {
-  
+function moveRowValuesToAnotherSheet(fromSheet, toSheet, rowValuesArr) {
+
 }
 function handleCompleteInputValue(value) {
       // let isComplete = ;
