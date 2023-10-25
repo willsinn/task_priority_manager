@@ -39,7 +39,7 @@ const activeIdValue = activeIdCell.getValue();
 function moveRowValuesToAnotherSheet(fromSheet, toSheet, rowValuesArr) {
 
 }
-function handleCompleteInputValue(value) {
+function handleCompleteInputValueActions(value) {
       // let isComplete = ;
       
 }
@@ -55,7 +55,7 @@ function allSheetNames() {
   });
   return namesArr;
 }
-const handleUpdateIDsOnSheetNameChange = () => activeSheetColA_values.map((tId, idx) => { //map through all existing IDs and update them to match the new sheet name
+const updateProjectIdsToNewSheetName = () => activeSheetColA_values.map((tId, idx) => { //map through all existing IDs and update them to match the new sheet name
       if (idx > 1 && tId[0]) { //skip first two rows
           const getIdParts = tId[0].split("__", 2);
             const newId = `${activeSheetName}` + '__' + `${ getIdParts[1] }`;
@@ -64,17 +64,12 @@ const handleUpdateIDsOnSheetNameChange = () => activeSheetColA_values.map((tId, 
       }  
     })
 
-function handleUpdateCellA1() {
-      const getSheetNameCell = activeSheet.getRange('A1');
-      getSheetNameCell.setValue(activeSheetName);
-}
-
 function handleUpdateMainTaskCountCellA2(count) { 
       const newCount = parseInt(count) + 1;
       prioritySheet.getRange('A2').setValue(newCount); //update task counter
 }
 
-const handleUpdatePriorityIds = () => prioritySheetColA.map((pId, idx) => {
+const updatePrioritySheetIdsToMatchNewSheetName = () => prioritySheetColA.map((pId, idx) => {
     if (idx > 1 && pId[0]) {
     const getIdParts = pId[0].split("__", 2);
         if (getIdParts[0] == activeSheetCellA1Value) {
@@ -87,11 +82,13 @@ const handleUpdatePriorityIds = () => prioritySheetColA.map((pId, idx) => {
     }
 })
 
-function handleSheetNameChange() {
+function checkForChangesToSheetNames() {
       if (activeSheetName !== COMPLETED_SHEET_NAME && activeSheetName !== MAIN_SHEET_NAME && activeSheetName !== activeSheetCellA1Value) {
-        handleUpdateIDsOnSheetNameChange();
-        handleUpdatePriorityIds();
-        handleUpdateCellA1();
+        updateProjectIdsToNewSheetName();
+        updatePrioritySheetIdsToMatchNewSheetName();
+        
+        const getSheetNameCell = activeSheet.getRange('A1');
+        getSheetNameCell.setValue(activeSheetName);
       }
     }
 
@@ -175,7 +172,7 @@ function createUniqueTaskId(cell) {
         const taskId = `${activeSheetName}` + "__" + `${taskCount}`;
         handleUpdateMainTaskCountCellA2(taskCount)
         cell.setValue(`${taskId}`); //add id to first column
-        handleUpdatePriorityIds();
+        updatePrioritySheetIdsToMatchNewSheetName();
         handleCopyNewTaskToPriorityManager(taskId); 
   }
 
@@ -293,6 +290,7 @@ function sortByPriortyThenDueDate(val) {
 }
 function onEdit(e) {
       let newValue = getNewActiveCellValue();
+      checkForChangesToSheetNames();
 
       // setLastUpdatedValue(activeSheet, activeMaxCols, activeRowIdx) // updates the ACTIVE SHEET's last updated value
       if (e && activeSheetName === COMPLETED_SHEET_NAME && newValue === false) { // checks if user is editing the completed sheet
@@ -300,7 +298,6 @@ function onEdit(e) {
       } 
       else {
 
-          handleSheetNameChange();
           if (priorityLevelKeys.includes(newValue)) {
             handlePriorityLevelChange(newValue);
           
