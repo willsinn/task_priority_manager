@@ -30,7 +30,8 @@ const activeRowIdx = activeCell.getRowIndex();
 const activeColIdx = activeCell.getColumnIndex();
 const activeSheetColA_values = activeSheet.getRange('A:A').getValues();
 const activeMaxCols = activeSheet.getMaxColumns();
-
+      const activeIdCell = activeSheet.getRange(`A${activeRowIdx}`);
+      const activeIdValue = activeIdCell.getValue();
 
 
 
@@ -88,11 +89,15 @@ function handleSheetNameChange() {
 
 function handleCopyNewTaskToPriorityManager(tId) {
     if (tId) {
-      const newTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols) ;
-      const newTaskValues = newTaskRow.getValues()
       prioritySheet.insertRowBefore(INSERT_TASK_ROW_IDX); //insert new row
-      newTaskValues[0].splice(1, 0, activeSheetName);
-      prioritySheet.getRange(INSERT_TASK_ROW_IDX, 1, 1, newTaskValues[0].length).setValues(newTaskValues)
+      let isCopyInProgress = prioritySheet.getRange(`A${INSERT_TASK_ROW_IDX}`).getValue();
+      if (!isCopyInProgress) {
+        const newTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols) ;
+        const newTaskValues = newTaskRow.getValues()
+        newTaskValues[0].splice(1, 0, activeSheetName);
+
+        prioritySheet.getRange(INSERT_TASK_ROW_IDX, 1, 1, newTaskValues[0].length).setValues(newTaskValues)
+      }
     }
 }
 
@@ -175,8 +180,7 @@ function setLastUpdatedValue(sheet, maxCols, rowIdx) {
 }
 
 function handlePriorityLevelChange(prioLvl) {
-      const activeIdCell = activeSheet.getRange(`A${activeRowIdx}`);
-      const activeIdValue = activeIdCell.getValue();
+
       if (!activeIdValue) {
           if (activeSheetName === MAIN_SHEET_NAME) {
             handleMainSheetCreateTask();
@@ -191,16 +195,19 @@ function alertMessageWithOKButton(val) {
   const result = SpreadsheetApp.getUi().alert(`${val}`, SpreadsheetApp.getUi().ButtonSet.OK);
   SpreadsheetApp.getActive().toast(result);
 } 
+
 function copyTaskToCompletedSheet(sName) {
       const completedSheet = targSheet(COMPLETED_SHEET_NAME);
       const completedTaskValues = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols).getValues();
       completedSheet.insertRowBefore(INSERT_TASK_ROW_IDX); //insert new row
-            
+      let isCopyInProgress = completedSheet.getRange(`A${INSERT_TASK_ROW_IDX}`).getValue();
       if (sName === activeSheetName) {
         completedTaskValues[0].splice(1, 0, activeSheetName);
       } 
+      if (!isCopyInProgress) {       
 
-      completedSheet.getRange(INSERT_TASK_ROW_IDX, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
+        completedSheet.getRange(INSERT_TASK_ROW_IDX, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
+      }
 }
 function deleteCompletedTaskFromSheet(name, taskId) {
       const sheetIds = targSheet(name).getRange('A:A').getValues();
@@ -277,7 +284,7 @@ function sortByPriortyThenDueDate() {
       }
 }
 function onEdit(e) {
-      setLastUpdatedValue(activeSheet, activeMaxCols, activeRowIdx) // updates the ACTIVE SHEET's last updated value
+      // setLastUpdatedValue(activeSheet, activeMaxCols, activeRowIdx) // updates the ACTIVE SHEET's last updated value
       if (e && activeSheetName === COMPLETED_SHEET_NAME && activeCellValue === false) { // checks if user is editing the completed sheet
           handleRestoreCompletedTask(); 
       } 
