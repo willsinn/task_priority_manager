@@ -44,13 +44,13 @@ const activeIdValue = activeIdCell.getValue();
 
 
 
-function handleMoveCompleteRowValuesToNewSheets(isComplete, fromSheets, toSheets, rowValuesArr) {
+function handleMoveCompleteRowValuesToNewSheets(isComplete, fromSheets, toSheets, rowValuesArr, invalidErrMsg) {
         let isValidTask = rowValuesArr[0][0];
 
         if (!isValidTask) { // conditional to check if the task is real
             const revertCell = getNewActiveCell();
             revertCell.setValue(!isComplete)
-            alertMessageWithOKButton("ADD MESSAGE")
+            alertMessageOnly(invalidErrMsg)
             return;
         }
         console.log(fromSheets, toSheets, rowValuesArr)
@@ -66,21 +66,24 @@ function onCompleteCheckboxUpdate(isComplete) {
         const taskProjectName = taskId.slice(0, -9); //slice off __#######
         const maxCols = getActiveSheetMaxCols();
 
-        let fromSheets, toSheets;
+        let fromSheets, toSheets, invalidErrMsg;
         const fromRowValuesArray = getAllRowValuesByMaxCols(activeRowIndex, maxCols)
 
 
         if (isComplete === false && activeSheetName === COMPLETED_SHEET_NAME) {
                 fromSheets = [COMPLETED_SHEET_NAME];
                 toSheets = [MAIN_SHEET_NAME, taskProjectName];
+                invalidErrMsg = "Error! Not a valid task, invalid tasks cannot be set to Complete. Please try a different row."
               // handleCompleteTask();
           } else {
               // handleRestoreCompletedTask();
                 fromSheets = [MAIN_SHEET_NAME, taskProjectName];
                 toSheets = [COMPLETED_SHEET_NAME];
+                invalidErrMsg = "Unable to execute command, task must exist to be restored to active sheets."
+
           }
 
-        handleMoveCompleteRowValuesToNewSheets(isComplete, fromSheets, toSheets, fromRowValuesArray);
+        handleMoveCompleteRowValuesToNewSheets(isComplete, fromSheets, toSheets, fromRowValuesArray, invalidErrMsg);
 
   }
 
@@ -237,11 +240,14 @@ function handlePriorityLevelChange(prioLvl) {
           handleSyncCellValueByTaskId(prioLvl)
       }
 }
-function alertMessageWithOKButton(val) {
-  const result = SpreadsheetApp.getUi().alert(`${val}`, SpreadsheetApp.getUi().ButtonSet.OK);
+function alertMessageWithOKButton(text) {
+  const result = SpreadsheetApp.getUi().alert(`${text}`, SpreadsheetApp.getUi().ButtonSet.OK);
   SpreadsheetApp.getActive().toast(result);
 } 
-
+function alertMessageOnly(text) {
+  const message = SpreadsheetApp.getUi().alert(`${text}`);
+  SpreadsheetApp.getActive().toast(message);
+} 
 function copyTaskToCompletedSheet(sName) {
       const completedSheet = getSheetBySheetName(COMPLETED_SHEET_NAME);
       const completedTaskValues = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols).getValues();
