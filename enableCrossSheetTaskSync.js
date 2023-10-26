@@ -44,16 +44,53 @@ const activeIdValue = activeIdCell.getValue();
 
 
 
-function handleMoveCompleteRowValuesToNewSheets(isComplete, fromSheets, toSheets, rowValuesArr, invalidErrMsg) {
-        let isValidTask = rowValuesArr[0][0];
+
+
+
+
+function handleMoveCompletedRowTaskValuesAcrossSheets(task_id, is_complete, from_sheets_arr, to_sheets_arr, row_arr, invalid_err_msg) {
+        let isValidTask = task_id;
+
 
         if (!isValidTask) { // conditional to check if the task is real
             const revertCell = getNewActiveCell();
-            revertCell.setValue(!isComplete)
-            alertMessageOnly(invalidErrMsg)
+            revertCell.setValue(!is_complete)
+            alertMessageOnly(invalid_err_msg)
             return;
         }
-        console.log(fromSheets, toSheets, rowValuesArr)
+        // console.log(fromSheets, toSheets, rowValuesArr)
+        // copy 
+        if (to_sheets_arr) {
+          const fromHeaderCellVals = to_sheets_arr[0][0];
+          const fromTaskCellVals = to_sheets_arr[0][1];
+          const activeSheetMaxCols = fromTaskCellVals.length+1;
+          to_sheets_arr.forEach(name => {
+            const sheet = getSheetBySheetName(name);
+            const toSheetMaxCols = sheet.getMaxColumns();
+            const toSheetHeaders = sheet.getRange(2, 1, 1, toSheetMaxCols).getValues();
+            sheet.insertRowBefore(INSERT_TASK_ROW_IDX); //insert new row
+              if (activeSheetMaxCols === toSheetMaxCols) {
+                  
+                  
+                  
+                  fromTaskCellVals.forEach((val, index) => {
+                      const fromHeader = fromHeaderCellVals[index];
+                      const xAxis_headerMatchColIdx = toSheetHeaders.findIndex(fromHeader);
+                      const yAxis_rowIdx = INSERT_TASK_ROW_IDX;
+                      console.log("I'M PAUSING HERE, THIS IS UNTESTED", xAxis_headerMatchColIdx, yAxis_rowIdx)
+                      const getCellByXY = sheet.getRange(xAxis_headerMatchColIdx, yAxis_rowIdx)
+                      getCellByXY.setValue(val);
+                  })
+              }
+              if (activeSheetMaxCols > toSheetMaxCols) {
+                
+              }
+              if (activeSheetMaxCols < toSheetMaxCols) {
+                
+              }
+          })
+        }
+
 }
 function onCompleteCheckboxUpdate(isComplete) {
   const activeColumnIndex = getActiveCellColIdx();  
@@ -66,9 +103,10 @@ function onCompleteCheckboxUpdate(isComplete) {
         const taskProjectName = taskId.slice(0, -9); //slice off __#######
         const maxCols = getActiveSheetMaxCols();
 
-        let fromSheets, toSheets, invalidErrMsg;
-        const fromRowValuesArray = getAllRowValuesByMaxCols(activeRowIndex, maxCols)
-
+        let fromSheets, toSheets, rowArray, invalidErrMsg;
+        const fromRowHeaderValues = getAllRowValuesByMaxCols(2, maxCols);
+        const fromRowTaskValues = getAllRowValuesByMaxCols(activeRowIndex, maxCols);
+        rowArray = [fromRowHeaderValues[0], fromRowTaskValues[0]]
 
         if (isComplete === false && activeSheetName === COMPLETED_SHEET_NAME) {
                 fromSheets = [COMPLETED_SHEET_NAME];
@@ -83,7 +121,7 @@ function onCompleteCheckboxUpdate(isComplete) {
 
           }
 
-        handleMoveCompleteRowValuesToNewSheets(isComplete, fromSheets, toSheets, fromRowValuesArray, invalidErrMsg);
+        handleMoveCompletedRowTaskValuesAcrossSheets(taskId, isComplete, fromSheets, toSheets, rowArray, invalidErrMsg);
 
   }
 
