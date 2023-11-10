@@ -14,7 +14,7 @@ const priorityLevelKeys = Object.keys(PRIORITY_LEVELS)
 const allProjectNames = allSheetNames();
 const targSheet = (name) => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
 const grabActiveCell = (str) => SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange(str);
-const getCurrentDateTimestampValue = () => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MAIN_SHEET_NAME).getRange('I1').getValue().toString();
+const getCurrentDateTimestampValue = () => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MAIN_SHEET_NAME).getRange('F1').getValue().toString();
 const getNewActiveCellValue = () => SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getActiveCell().getValue();
 
 
@@ -184,7 +184,7 @@ function setLastUpdatedValue(sheet, maxCols, rowIdx) {
     }
 }
 
-function handlePriorityLevelChange(prioLvl) {
+function onChangeTaskPriorityLevel(prioLvl) {
 
       if (!activeIdValue) {
           if (activeSheetName === MAIN_SHEET_NAME) {
@@ -231,7 +231,7 @@ function deleteCompletedTaskFromSheet(name, taskId) {
         alertMessageWithOKButton(errorMsg)
       }
 }
-function handleCompleteTask() {
+function onSetTaskComplete() {
       if (activeSheetName !== COMPLETED_SHEET_NAME) {
         const taskId = activeSheet.getRange(`A${ activeRowIdx }`).getValue();
         const projectName = taskId.slice(0, -9); //slice off __#######
@@ -241,7 +241,7 @@ function handleCompleteTask() {
       }
 }
 
-function handleRestoreCompletedTask() {
+function onSetTaskIncomplete() {
       const completedTaskValues = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols).getValues();
       
       if (completedTaskValues[0][0]) {
@@ -292,18 +292,18 @@ function onEdit(e) {
       let newValue = getNewActiveCellValue();
       checkForChangesToSheetNames();
 
-      // setLastUpdatedValue(activeSheet, activeMaxCols, activeRowIdx) // updates the ACTIVE SHEET's last updated value
       if (e && activeSheetName === COMPLETED_SHEET_NAME && newValue === false) { // checks if user is editing the completed sheet
-          handleRestoreCompletedTask(); 
+          onSetTaskIncomplete(); 
       } 
       else {
+          setLastUpdatedValue(activeSheet, activeMaxCols, activeRowIdx) // updates the ACTIVE SHEET's last updated value, this script is put here so it can get deleted by onSetTaskComplete
 
           if (priorityLevelKeys.includes(newValue)) {
-            handlePriorityLevelChange(newValue);
+            onChangeTaskPriorityLevel(newValue);
           
           } 
           else if (newValue === true) {
-            handleCompleteTask();
+            onSetTaskComplete();
           
           } 
           else {
