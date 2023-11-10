@@ -2,7 +2,6 @@ const MAIN_SHEET_NAME = "task_priority_manager";
 const COMPLETED_SHEET_NAME = "completed_tasks";
 const PRIO_LVLS_COL_NAME = "Priority Level";
 const DUE_DATE_COL_NAME = "Due Date";
-const COMPLETE_COL_NAME = "Complete"
 const INSERT_TASK_ROW_IDX = 3;
 const PRIORITY_LEVELS = {
                           'Critical': 0,
@@ -11,20 +10,13 @@ const PRIORITY_LEVELS = {
                           'Low': 3,
                         }
 const priorityLevelKeys = Object.keys(PRIORITY_LEVELS)
-const activeSS = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-const allProjectNames = allSheetNames();
-const getSheetBySheetName = (name) => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
-const grabActiveCellByLetterNumberValue = (letternumber) => activeSS.getRange(letternumber);
-const getCurrentDateTimestampValue = () => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MAIN_SHEET_NAME).getRange('I1').getValue().toString();
-const getNewActiveCell = () => activeSS.getActiveCell();
-const getActiveSheetName = () => activeSS.getName();
-const getActiveCellColIdx = () => activeSS.getActiveCell().getColumnIndex();
-const getActiveCellRowIdx = () => activeSS.getActiveCell().getRowIndex();
-const getTaskIdByRowIdx = (rowIdx) => activeSS.getRange(`A${ rowIdx }`).getValue();
-const getActiveSheetMaxCols = () => activeSS.getMaxColumns();
-const getAllRowValuesByMaxCols = (rowIdx, numCols) => activeSS.getRange(rowIdx, 1, 1, numCols).getValues();
 
-const getActiveColHeaderCellByColIdx = (colIdx) => activeSS.getRange(2, colIdx);
+const allProjectNames = allSheetNames();
+const targSheet = (name) => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+const grabActiveCell = (str) => SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getRange(str);
+const getCurrentDateTimestampValue = () => SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MAIN_SHEET_NAME).getRange('I1').getValue().toString();
+const getNewActiveCellValue = () => SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getActiveCell().getValue();
+
 
 const prioritySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MAIN_SHEET_NAME);
 const prioritySheetColA = prioritySheet.getRange('A:A').getValues();
@@ -44,87 +36,12 @@ const activeIdValue = activeIdCell.getValue();
 
 
 
-
-
-
-
-function handleMoveCompletedRowTaskValuesAcrossSheets(task_id, is_complete, from_sheets_arr, to_sheets_arr, row_arr, invalid_err_msg) {
-        let isValidTask = task_id;
-        if (!isValidTask) { // conditional to check if the task is real
-            const revertCell = getNewActiveCell();
-            revertCell.setValue(!is_complete)
-            alertMessageOnly(invalid_err_msg)
-            return;
-        }
-        // console.log(fromSheets, toSheets, rowValuesArr)
-        // copy 
-        if (to_sheets_arr) {
-          const fromHeadersArr = row_arr[0][0];
-          const fromTaskValuesArr = row_arr[1][0];
-          const activeSheetMaxCols = fromTaskValuesArr.length;
-          to_sheets_arr.forEach(name => {
-            const sheet = getSheetBySheetName(name);
-            const toSheetMaxCols = sheet.getMaxColumns();
-            const toSheetHeaders = sheet.getRange(2, 1, 1, toSheetMaxCols).getValues();
-            sheet.insertRowBefore(INSERT_TASK_ROW_IDX); //insert new row
-              if (activeSheetMaxCols === toSheetMaxCols) {
-                  
-                  
-                  
-                  fromTaskValuesArr.forEach((val, index) => {
-                    if (index > 0) { // index 0 is the ID row, we don't want to change this
-                      const fromHeader = fromHeadersArr[index];
-                      const xAxis_headerMatchColIdx = toSheetHeaders[0].indexOf(fromHeader);
-                      const yAxis_rowIdx = INSERT_TASK_ROW_IDX;
-                      console.log("I'M PAUSING HERE, THIS IS UNTESTED", xAxis_headerMatchColIdx, yAxis_rowIdx)
-                      sheet.getRange(xAxis_headerMatchColIdx, yAxis_rowIdx).setValue(val)
-                      // STOPPED HERE 10.27.23
-                    }
-                  })
-              }
-              if (activeSheetMaxCols > toSheetMaxCols) {
-                
-              }
-              if (activeSheetMaxCols < toSheetMaxCols) {
-                
-              }
-          })
-        }
+function moveRowValuesToAnotherSheet(fromSheet, toSheet, rowValuesArr) {
 
 }
-function onCompleteCheckboxUpdate(isComplete) {
-  const activeColumnIndex = getActiveCellColIdx();  
-  const activeRowIndex = getActiveCellRowIdx();
-  const taskId = getTaskIdByRowIdx(activeRowIndex);
-
-  let isHeaderValueComplete = getActiveColHeaderCellByColIdx(activeColumnIndex).getValue();
-  if (isHeaderValueComplete && isHeaderValueComplete === COMPLETE_COL_NAME) { // Double check that the column name is "Complete"
-        const actiSS = getActiveSheetName();
-        const taskProjectName = taskId.slice(0, -9); //slice off __#######
-        const maxCols = getActiveSheetMaxCols();
-
-        let fromSheets, toSheets, rowArray, invalidErrMsg;
-        const fromRowHeaderValues = getAllRowValuesByMaxCols(2, maxCols);
-        const fromRowTaskValues = getAllRowValuesByMaxCols(activeRowIndex, maxCols);
-        rowArray = [fromRowHeaderValues, fromRowTaskValues]
-
-        if (isComplete === false && actiSS === COMPLETED_SHEET_NAME) {
-                fromSheets = [COMPLETED_SHEET_NAME];
-                toSheets = [MAIN_SHEET_NAME, taskProjectName];
-                invalidErrMsg = "Error! Not a valid task, invalid tasks cannot be set to Complete. Please try a different row."
-              // handleCompleteTask();
-          } else {
-              // handleRestoreCompletedTask();
-                fromSheets = [MAIN_SHEET_NAME, taskProjectName];
-                toSheets = [COMPLETED_SHEET_NAME];
-                invalidErrMsg = "Unable to execute command, task must exist to be restored to active sheets."
-
-          }
-
-        handleMoveCompletedRowTaskValuesAcrossSheets(taskId, isComplete, fromSheets, toSheets, rowArray, invalidErrMsg);
-
-  }
-
+function handleCompleteInputValueActions(value) {
+      // let isComplete = ;
+      
 }
 function allSheetNames() {
   const ss = SpreadsheetApp.getActive();
@@ -179,21 +96,14 @@ function handleCopyNewTaskToPriorityManager(tId) {
     if (tId) {
       prioritySheet.insertRowBefore(INSERT_TASK_ROW_IDX); //insert new row
       let isCopyInProgress = prioritySheet.getRange(`A${INSERT_TASK_ROW_IDX}`).getValue();
-
-
-      const newTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols) ;
+      if (!isCopyInProgress) {
+        const newTaskRow = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols) ;
         const newTaskValues = newTaskRow.getValues()
         newTaskValues[0].splice(1, 0, activeSheetName);
-
-
-        
-        if (!isCopyInProgress) {
-        
 
         prioritySheet.getRange(INSERT_TASK_ROW_IDX, 1, 1, newTaskValues[0].length).setValues(newTaskValues)
       }
     }
-    
 }
 
 function handleSyncCellValueByTaskId(newVal) { 
@@ -219,7 +129,7 @@ function handleSyncCellValueByTaskId(newVal) {
           const targetSheetMaxCols = targetSheet.getMaxColumns();
           const targetHeaders = targetSheet.getRange(2, 1, 1, targetSheetMaxCols).getValues();
           const targetTaskColIdx = targetHeaders[0].indexOf(valColHeader);
-          const targetSheetCell = targetSheet.getRange(rowArray[0], targetTaskColIdx + 1)
+          const targetSheetCell = targetSheet.getRange(rowArray[0]+1, targetTaskColIdx + 1)
           targetSheetCell.setValue(newVal)
           setLastUpdatedValue(targetSheet, targetSheetMaxCols, rowArray[0]+1) // updates the TARGET SHEET's last updated value
         }
@@ -227,7 +137,7 @@ function handleSyncCellValueByTaskId(newVal) {
 
 function copyNewTaskToProjectSheet(name) {
         const newTaskValues = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols).getValues();
-        const projectSheet = getSheetBySheetName(name);
+        const projectSheet = targSheet(name);
 
         projectSheet.insertRowBefore(INSERT_TASK_ROW_IDX)
         newTaskValues[0].splice(1, 1); // REMOVE THE EXTRA PROJECT COLUMN
@@ -239,7 +149,7 @@ function copyNewTaskToProjectSheet(name) {
         newTaskValues[0].splice(0, 1, taskId); // ADD NEW ID VALUE ONTO SHEET
 
         projectSheet.getRange(INSERT_TASK_ROW_IDX, 1, 1, newTaskValues[0].length).setValues(newTaskValues)
-        const mainTaskIdCell = grabActiveCellByLetterNumberValue(`A${activeRowIdx}`)
+        const mainTaskIdCell = grabActiveCell(`A${activeRowIdx}`)
         mainTaskIdCell.setValue(taskId)
 
         handleUpdateMainTaskCountCellA2(taskCount)
@@ -262,7 +172,7 @@ function createUniqueTaskId(cell) {
         const taskId = `${activeSheetName}` + "__" + `${taskCount}`;
         handleUpdateMainTaskCountCellA2(taskCount)
         cell.setValue(`${taskId}`); //add id to first column
-        handleUpdatePriorityIds();
+        updatePrioritySheetIdsToMatchNewSheetName();
         handleCopyNewTaskToPriorityManager(taskId); 
   }
 
@@ -286,16 +196,13 @@ function handlePriorityLevelChange(prioLvl) {
           handleSyncCellValueByTaskId(prioLvl)
       }
 }
-function alertMessageWithOKButton(text) {
-  const result = SpreadsheetApp.getUi().alert(`${text}`, SpreadsheetApp.getUi().ButtonSet.OK);
+function alertMessageWithOKButton(val) {
+  const result = SpreadsheetApp.getUi().alert(`${val}`, SpreadsheetApp.getUi().ButtonSet.OK);
   SpreadsheetApp.getActive().toast(result);
 } 
-function alertMessageOnly(text) {
-  const message = SpreadsheetApp.getUi().alert(`${text}`);
-  SpreadsheetApp.getActive().toast(message);
-} 
+
 function copyTaskToCompletedSheet(sName) {
-      const completedSheet = getSheetBySheetName(COMPLETED_SHEET_NAME);
+      const completedSheet = targSheet(COMPLETED_SHEET_NAME);
       const completedTaskValues = activeSheet.getRange(activeRowIdx, 1, 1, activeMaxCols).getValues();
       completedSheet.insertRowBefore(INSERT_TASK_ROW_IDX); //insert new row
       let isCopyInProgress = completedSheet.getRange(`A${INSERT_TASK_ROW_IDX}`).getValue();
@@ -308,7 +215,7 @@ function copyTaskToCompletedSheet(sName) {
       }
 }
 function deleteCompletedTaskFromSheet(name, taskId) {
-      const sheetIds = getSheetBySheetName(name).getRange('A:A').getValues();
+      const sheetIds = targSheet(name).getRange('A:A').getValues();
       const errorMsg = "task_id doesn't match on" +`${name}` + "sheet, please report to dev";
       const task = {};
       sheetIds.forEach((tId, index) => {
@@ -318,7 +225,7 @@ function deleteCompletedTaskFromSheet(name, taskId) {
           }
       })
       if (task.id === taskId) {
-        getSheetBySheetName(name).deleteRow(task.rowIdx)
+        targSheet(name).deleteRow(task.rowIdx)
       } 
       else {
         alertMessageWithOKButton(errorMsg)
@@ -344,12 +251,12 @@ function handleRestoreCompletedTask() {
 
         completedTaskValues[0].splice(1, 1) //remove the project column
         const projectName = completedTaskValues[0][0].slice(0, -9)
-        const projectSheet = getSheetBySheetName(projectName);
+        const projectSheet = targSheet(projectName);
         
         projectSheet.insertRowBefore(INSERT_TASK_ROW_IDX); //insert new row
         projectSheet.getRange(INSERT_TASK_ROW_IDX, 1, 1, completedTaskValues[0].length).setValues(completedTaskValues)
         
-        getSheetBySheetName(COMPLETED_SHEET_NAME).deleteRow(activeRowIdx) // remove row from completed
+        targSheet(COMPLETED_SHEET_NAME).deleteRow(activeRowIdx) // remove row from completed
       }
 }
 function sortByPriortyThenDueDate(val) {
@@ -381,17 +288,22 @@ function sortByPriortyThenDueDate(val) {
         prioritySheet.getRange('A3:I').setValues(data);
       }
 }
-function onEdit() {
-      let newValue = getNewActiveCell().getValue();
+function onEdit(e) {
+      let newValue = getNewActiveCellValue();
+      checkForChangesToSheetNames();
+
       // setLastUpdatedValue(activeSheet, activeMaxCols, activeRowIdx) // updates the ACTIVE SHEET's last updated value
-      if (typeof newValue === "boolean") { // checks if user is editing the completed sheet
-          onCompleteCheckboxUpdate(newValue); 
+      if (e && activeSheetName === COMPLETED_SHEET_NAME && newValue === false) { // checks if user is editing the completed sheet
+          handleRestoreCompletedTask(); 
       } 
       else {
-      checkForChangesToSheetNames();
 
           if (priorityLevelKeys.includes(newValue)) {
             handlePriorityLevelChange(newValue);
+          
+          } 
+          else if (newValue === true) {
+            handleCompleteTask();
           
           } 
           else {
